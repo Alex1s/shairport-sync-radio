@@ -43,7 +43,7 @@ ffmpeg.on(`error`, (err) => {
 
 ffmpeg.stdout.on(`data`, (chunk) => {
     lastTimeDataReceived = moment()
-    mp3OutputStreams.filter(stream => {
+    mp3OutputStreams = mp3OutputStreams.filter(stream => {
         if (stream.writableEnded) {
             return false
         }
