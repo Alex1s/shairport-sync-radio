@@ -6,7 +6,7 @@ const child_process = require(`child_process`)
 const moment = require(`moment`)
 
 let mp3OutputStreams = []
-let lastMp3OOutputStreamCount = null
+let activeStreamingConnections = 0
 let lastTimeDataReceived = moment()
 let shairportSyncPCMInputStream = fs.createReadStream(`/tmp/shairport-sync-audio`)
 
@@ -43,12 +43,16 @@ ffmpeg.on(`error`, (err) => {
 
 ffmpeg.stdout.on(`data`, (chunk) => {
     lastTimeDataReceived = moment()
-    if (mp3OutputStreams.length !== lastMp3OOutputStreamCount) {
-        console.log(`Now writing to ${mp3OutputStreams.length} streams instead of previously ${lastMp3OOutputStreamCount}`)
-        lastMp3OOutputStreamCount = mp3OutputStreams.length
-    }
-    mp3OutputStreams.forEach((stream) => {
-        stream.write(chunk)
+    mp3OutputStreams.filter(stream => {
+        if (stream.writableEnded) {
+            return false
+        }
+        if (stream.writable) {
+            stream.write(chunk)
+            return true
+        }
+        console.warn(`We have a stream which is neither ended nor is writeable! Removing it just in case ...`)
+        return false
     })
 })
 
@@ -67,8 +71,13 @@ app.get(`/`, (_, res) => {
 
 app.get('/radio.mp3', (req, res) => {
     console.debug(`Somebody is trying to listen to the radio ...`)
+
+    activeStreamingConnections += 1
+    console.info(`Currently active connections: ${activeStreamingConnections}`)
+
     req.on(`close`, async () => {
-        mp3OutputStreams = mp3OutputStreams.filter(writeable => writeable !== res);
+        activeStreamingConnections -= 1
+        console.info(`Currently active connections: ${activeStreamingConnections}`)
     })
 
     res.contentType(`audio/mpeg`)
