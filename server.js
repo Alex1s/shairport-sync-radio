@@ -27,24 +27,34 @@ function setActiveStreamCount(count) {
     console.info(`Currently active connections: ${activeStreamingConnections}`)
 }
 
+function shutdown() {
+    return new Promise(resolve => {
+        console.debug(`Closing express app ...`)
+        app.close(err => {
+            if (err !== null) {
+                console.error(`During shutdown following error occurred:`)
+                console.error(err)
+            }
+            console.debug(`Express app closed!`)
+            process.exit(1)
+        })
+    })
+}
+
 
 const shairportSyncMP3 = child_process.spawn(command(), {shell: true, stdio: [`ignore`, `pipe`, `ignore`]})
 
 shairportSyncMP3.on(`error`, async err => {
-    console.log(err)
-    console.debug(`Closing express app ...`)
-    await app.close()
-    console.debug(`Express app closed!`)
-    process.exit(1)
+    console.error(`shairportSyncMP3 raised following error:`)
+    console.error(err)
+
+    await shutdown()
 })
 
 shairportSyncMP3.on(`exit`, async (code, signal) => {
     console.error(`shairportSyncMP3 exited! Exit code: ${code}. Exit signal ${signal}.`)
 
-    console.debug(`Closing express app ...`)
-    await app.close()
-    console.debug(`Express app closed!`)
-    process.exit(1)
+    await shutdown()
 })
 
 shairportSyncMP3.stdout.on(`data`, (chunk) => {
