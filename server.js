@@ -1,6 +1,7 @@
 `use strict`
 
 const express = require('express');
+const process = require(`process`)
 const fs = require('fs')
 const child_process = require(`child_process`)
 const moment = require(`moment`)
@@ -8,15 +9,32 @@ const moment = require(`moment`)
 let mp3OutputStreams = []
 let activeStreamingConnections = 0
 let lastTimeDataReceived = moment()
-let shairportSyncPCMInputStream = fs.createReadStream(`/tmp/shairport-sync-audio`)
+
+let shairportSyncPCMInputStream = {}
+let shairportSyncPCMInputStreamError = null
+
+async function startInputStreamLoop() {
+    shairportSyncPCMInputStream = fs.createReadStream(process.env.PIPE_PATH || `/tmp/shairport-sync-audio`)
+
+    shairportSyncPCMInputStream.on(`error`, async function (err) {
+        shairportSyncPCMInputStreamError = err
+        await new Promise(resolve => setTimeout(resolve, 100))
+        startInputStreamLoop()
+    })
+
+    shairportSyncPCMInputStream.on(`open`, function() {
+        console.debug(`Shairport-Sync PCM input stream is opened.`)
+        shairportSyncPCMInputStreamError = null
+    })
 
 
-shairportSyncPCMInputStream.on(`open`, () => {
-    console.debug(`Shairport-Sync PCM input stream is opened.`)
-})
-shairportSyncPCMInputStream.on(`ready`, () => {
-    console.debug(`Shairport-Sync PCM input stream is ready.`)
-})
+    shairportSyncPCMInputStream.on(`ready`, function () {
+        console.debug(`Shairport-Sync PCM input stream is ready.`)
+        shairportSyncPCMInputStreamError = null
+    })
+}
+startInputStreamLoop()
+
 
 const ffmpeg = child_process.spawn(`ffmpeg`, [
     `-f`, `s16le`,
@@ -73,19 +91,17 @@ app.get('/radio.mp3', (req, res) => {
     console.debug(`Somebody is trying to listen to the radio ...`)
 
     activeStreamingConnections += 1
-    console.info(`Currently active connections: ${activeStreamingConnections}`)
 
     req.on(`close`, async () => {
         activeStreamingConnections -= 1
-        console.info(`Currently active connections: ${activeStreamingConnections}`)
     })
 
     res.contentType(`audio/mpeg`)
     mp3OutputStreams.push(res)
 })
 
-app.listen(8081, () => {
-    console.debug(`The webserver is running ...`)
+const listener = app.listen(process.env.PORT, (arg1, arg2, arg3) => {
+    console.debug(`The webserver is running and listening on port ${listener.address().port}`)
 });
 
 
@@ -93,5 +109,11 @@ app.listen(8081, () => {
     while (true) {
         await new Promise((resolve => setTimeout(resolve, 5000)))
         console.info(`Last time data received: ${lastTimeDataReceived.fromNow()}`)
+        console.info(`Currently active connections: ${activeStreamingConnections}`)
+        if (shairportSyncPCMInputStreamError !== null) {
+            console.error(`Following error occurred:`)
+            console.error(JSON.parse(JSON.stringify(shairportSyncPCMInputStreamError)))
+        }
+        console.log()
     }
 })()
