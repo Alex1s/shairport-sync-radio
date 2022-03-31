@@ -32,7 +32,9 @@ const shairportSyncMP3 = child_process.spawn(command(), {shell: true, stdio: [`i
 
 shairportSyncMP3.on(`error`, async err => {
     console.log(err)
+    console.debug(`Closing express app ...`)
     await app.close()
+    console.debug(`Express app closed!`)
     process.exit(1)
 })
 
