@@ -42,7 +42,7 @@ function shutdown() {
 }
 
 
-const shairportSyncMP3 = child_process.spawn(command(), {shell: true, stdio: [`ignore`, `pipe`, `ignore`]})
+const shairportSyncMP3 = child_process.spawn(command(), {shell: true, stdio: [`ignore`, `pipe`, process.env.DEBUG ? 'inherit' : `ignore`]})
 
 shairportSyncMP3.on(`error`, async err => {
     console.error(`shairportSyncMP3 raised following error:`)
