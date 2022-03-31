@@ -31,7 +31,7 @@ function shutdown() {
     return new Promise(resolve => {
         console.debug(`Closing express app ...`)
         listener.close(err => {
-            if (err !== null) {
+            if (err) {
                 console.error(`During shutdown following error occurred:`)
                 console.error(err)
             }
