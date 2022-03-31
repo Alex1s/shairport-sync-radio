@@ -38,8 +38,13 @@ shairportSyncMP3.on(`error`, async err => {
     process.exit(1)
 })
 
-shairportSyncMP3.on(`exit`, (code, signal) => {
+shairportSyncMP3.on(`exit`, async (code, signal) => {
     console.error(`shairportSyncMP3 exited! Exit code: ${code}. Exit signal ${signal}.`)
+
+    console.debug(`Closing express app ...`)
+    await app.close()
+    console.debug(`Express app closed!`)
+    process.exit(1)
 })
 
 shairportSyncMP3.stdout.on(`data`, (chunk) => {
