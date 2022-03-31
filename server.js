@@ -30,7 +30,7 @@ function setActiveStreamCount(count) {
 function shutdown() {
     return new Promise(resolve => {
         console.debug(`Closing express app ...`)
-        app.close(err => {
+        listener.close(err => {
             if (err !== null) {
                 console.error(`During shutdown following error occurred:`)
                 console.error(err)
