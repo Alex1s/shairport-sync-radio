@@ -19,7 +19,8 @@ function ffmpegCommand() {
 }
 
 function command() {
-    return `${shairportSyncCommand()} | ${ffmpegCommand()}`
+    //return `${shairportSyncCommand()} | ${ffmpegCommand()}`
+    return `${shairportSyncCommand()}`
 }
 
 function setActiveStreamCount(count) {
@@ -73,7 +74,10 @@ shairportSyncMP3.stdout.on(`data`, (chunk) => {
 
 
 app.get(`/`, (_, res) => {
-    const html = '<!DOCTYPE html><html lang="en"><body><audio controls><source src="radio.mp3" type="audio/mpeg"></audio></body>'
+    const html = '<!DOCTYPE html><html lang="en"><body>' +
+        '<div>MP3<audio controls><source src="radio.mp3" type="audio/mpeg"></audio></div>' +
+        '<div>WAV<audio controls><source src="radio.wav" type="audio/wav"></audio></div>' +
+        '</body>'
     res.contentType(`text/html`)
     res.write(html)
     res.end()
@@ -87,6 +91,20 @@ app.get('/radio.mp3', (req, res) => {
     })
 
     res.contentType(`audio/mpeg`)
+    mp3OutputStreams.push(res)
+})
+
+app.get('/radio.wav', (req, res) => {
+    setActiveStreamCount(activeStreamingConnections + 1)
+
+    req.on(`close`, async () => {
+        setActiveStreamCount(activeStreamingConnections - 1)
+    })
+
+    res.contentType(`audio/wav`)
+    const headerHexString = `52494646ffffffff57415645666d7420100000000100020044ac000010b102000400100064617461dbffffff`
+    const headerBuffer = new Uint8Array(headerHexString.match(/../g).map(h=>parseInt(h,16)))
+    res.write(headerBuffer)
     mp3OutputStreams.push(res)
 })
 
