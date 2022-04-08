@@ -11,6 +11,7 @@ function setPipeSize(source, sink, size) {
 
 app.use('*', (req, _, next) => {
     if (process.env[`DEBUG`]) {
+        console.debug(req.method)
         console.debug(req.headers)
     }
     next()
