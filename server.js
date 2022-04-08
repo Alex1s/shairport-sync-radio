@@ -9,6 +9,13 @@ function setPipeSize(source, sink, size) {
     source.highWaterMark = sink.highWaterMark = size
 }
 
+app.use('*', (req, _, next) => {
+    if (process.env[`DEBUG`]) {
+        console.debug(req.headers)
+    }
+    next()
+})
+
 app.get(`/radio_mp3`, (_, res) => {
     const html = '<!DOCTYPE html><html lang="en"><body>' +
         '<div>MP3<audio controls><source src="radio.mp3" type="audio/mpeg"></audio></div>' +
