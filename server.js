@@ -47,7 +47,7 @@ app.get('/radio.wav', (req, res) => {
         console.error(err)
     })
 
-    const headerHexString = `52494646ffffffff57415645666d7420100000000100020044ac000010b102000400100064617461dbffffff`
+    const headerHexString = `52494646ffffffff57415645666d7420100000000100020044ac000010b102000400100064617461d8ffffff`
     const headerBuffer = new Uint8Array(headerHexString.match(/../g).map(h=>parseInt(h,16)))
     res.write(headerBuffer)
 
