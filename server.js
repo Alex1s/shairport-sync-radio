@@ -71,7 +71,7 @@ app.get('/radio.wav', (req, res) => {
             console.debug(`range from ${ranges[0].start} until ${ranges[0].end}`)
         }
     }
-    if (!ranges) {
+    if (!ranges || (ranges[0].start === 0 && ranges[0].end === fileSize - 1)) { // this is the firefox web browser
         res.write(headerBuffer)
     } else if (ranges && (ranges.length > 1 || ranges[0].start !== 44 || ranges[0].end !== fileSize - 1)) {
         console.error(`More than one range specified or range is not the expected one.`)
