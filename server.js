@@ -71,8 +71,21 @@ app.get('/radio.wav', (req, res) => {
             console.debug(`range from ${ranges[0].start} until ${ranges[0].end}`)
         }
     }
+    if (!ranges) {
+        res.write(headerBuffer)
+    } else if (ranges && (ranges.length > 1 || ranges[0].start !== 44 || ranges[0].end !== fileSize - 1)) {
+        console.error(`More than one range specified or range is not the expected one.`)
+        res.status(500)
+        return res.end()
+    } else if (ranges) { // this should be the AMP
+        console.assert(ranges)
+        console.assert(ranges[0])
+        console.assert(ranges[0].start === 44)
+        console.assert(ranges[0].end === fileSize - 1)
 
-    res.write(headerBuffer)
+        res.setHeader(`Content-Range`, `bytes 44-${fileSize - 1}/${fileSize}`)
+    }
+
 
     setPipeSize(process.stdin, res, 44100 * 4) // one second
     process.stdin.pipe(res)
