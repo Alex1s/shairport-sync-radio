@@ -5,6 +5,10 @@ const process = require(`process`)
 
 const app = express();
 
+function setPipeSize(source, sink, size) {
+    source.highWaterMark = sink.highWaterMark = size
+}
+
 app.get(`/radio_mp3`, (_, res) => {
     const html = '<!DOCTYPE html><html lang="en"><body>' +
         '<div>MP3<audio controls><source src="radio.mp3" type="audio/mpeg"></audio></div>' +
@@ -33,6 +37,7 @@ app.get('/radio.mp3', (req, res) => {
         console.error(err)
     })
 
+    setPipeSize(process.stdin, res, 0x400) // 1 Kibibyte
     process.stdin.pipe(res)
     console.debug(`MP3 stream pipe!`)
 })
@@ -51,6 +56,7 @@ app.get('/radio.wav', (req, res) => {
     const headerBuffer = new Uint8Array(headerHexString.match(/../g).map(h=>parseInt(h,16)))
     res.write(headerBuffer)
 
+    setPipeSize(process.stdin, res, 44100 * 4) // one second
     process.stdin.pipe(res)
     console.debug(`WAV stream pipe!`)
 })
