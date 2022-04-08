@@ -67,6 +67,9 @@ app.get('/radio.wav', (req, res) => {
     const ranges = req.range(fileSize)
     if (process.env[`DEBUG`]) {
         console.debug(ranges)
+        if (ranges !== undefined) {
+            console.debug(`range from ${ranges[0].start} until ${ranges[0].stop}`)
+        }
     }
 
     res.write(headerBuffer)
