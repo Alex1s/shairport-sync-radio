@@ -60,8 +60,15 @@ app.get('/radio.wav', (req, res) => {
         console.error(err)
     })
 
+    const fileSize = 0xFFFF_FFFC
     const headerHexString = `52494646f4ffffff57415645666d7420100000000100020044ac000010b102000400100064617461d0ffffff`
     const headerBuffer = new Uint8Array(headerHexString.match(/../g).map(h=>parseInt(h,16)))
+
+    const ranges = req.range(fileSize)
+    if (process.env[`DEBUG`]) {
+        console.debug(ranges)
+    }
+
     res.write(headerBuffer)
 
     setPipeSize(process.stdin, res, 44100 * 4) // one second
