@@ -35,7 +35,7 @@ app.get('/radio.wav', (req, res) => {
         // not sure if 4096 this is related to Express, node.js, the (linux) kerel, the NIC or the AMP
         // so try around with this value if the AMP does not follow
         res.write(headerBuffer)
-        res.write(`0`.repeat(totalBytesToSend - headerBuffer.byteLength))         //res.end()
+        res.write(`0`.repeat(totalBytesToSend - headerBuffer.byteLength))
     } else if (ranges) { // this should be the AMP
         console.assert(ranges)
         console.assert(ranges[0])
